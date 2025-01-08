@@ -73,6 +73,9 @@ pub enum PDError {
     #[error("Visualizer Init error")]
     VisualizerInitError,
 
+    #[error("Error finding InitParams for {}", .0)]
+    VisualizerInitParamsError(String),
+
     #[error("Not an archive or directory")]
     RecordNotArchiveOrDirectory,
 
