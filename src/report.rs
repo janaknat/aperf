@@ -159,6 +159,7 @@ pub fn report(report: &Report, tmp_dir: &PathBuf) -> Result<()> {
         }
     }
 
+    let mut init_map: HashMap<String, crate::InitParams> = HashMap::new();
     /* Get dir paths, names */
     for dir in &data_dirs {
         let path = get_dir(dir.to_path_buf(), tmp_dir)?;
@@ -167,8 +168,14 @@ pub fn report(report: &Report, tmp_dir: &PathBuf) -> Result<()> {
             error!("Cannot process two runs with the same name");
             return Ok(());
         }
-        dir_names.push(dir_name);
+        dir_names.push(dir_name.clone());
         dir_paths.push(path.to_str().unwrap().to_string());
+        let metadata_path = PathBuf::from(dir).join("meta_data.bin");
+        let metadata_file = File::open(metadata_path)?;
+        match bincode::deserialize_from::<_, crate::InitParams>(metadata_file) {
+            Ok(v) => init_map.insert(dir_name, v),
+            Err(_) => return Err(PDError::VisualizerInitParamsError(dir_name).into()),
+        };
     }
 
     let mut report_name = PathBuf::new();
@@ -255,6 +262,14 @@ pub fn report(report: &Report, tmp_dir: &PathBuf) -> Result<()> {
         "runs_raw = {}",
         serde_json::to_string(&run_names)?
     )?;
+    let out_loc = report_name.join("data/js/init_params.js");
+    let mut init_params_file = File::create(out_loc)?;
+    write!(
+        init_params_file,
+        "init_params_raw = {}",
+        serde_json::to_string(&init_map)?
+    )?;
+
     let visualizer_names = visualizer.get_visualizer_names()?;
 
     /* Get visualizer data */
