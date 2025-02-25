@@ -57,8 +57,8 @@ fn record_with_name(run: String, tempdir: &Path, aperf_tmp: &Path) -> Result<Str
     let run_name = tempdir.join(run).into_os_string().into_string().unwrap();
     let rec = Record {
         run_name: Some(run_name.clone()),
-        interval: 1,
-        period: 2,
+        interval: Some("1".to_string()),
+        period: Some("2".to_string()),
         profile: false,
         profile_java: None,
         pmu_config: None,

@@ -37,6 +37,9 @@ pub enum PDError {
     #[error("Error initializing logger")]
     LoggerInitError,
 
+    #[error("Invalid Collector parameters: {}", .0)]
+    CollectorInvalidParams(String),
+
     #[error("Error getting JavaScript file for {}", .0)]
     VisualizerJSFileGetError(String),
 
@@ -269,14 +272,14 @@ impl PerformanceData {
         let start = time::Instant::now();
         let mut aperf_collect_data = AperfStat::new("aperf-collect-data".to_string());
         let mut current = time::Instant::now();
-        let end = current + time::Duration::from_secs(self.init_params.period);
+        let end = current + time::Duration::from_millis(self.init_params.period_in_ms.try_into()?);
 
         // TimerFd
         let mut tfd = TimerFd::new()?;
         tfd.set_state(
             TimerState::Periodic {
-                current: time::Duration::from_secs(self.init_params.interval),
-                interval: time::Duration::from_secs(self.init_params.interval),
+                current: time::Duration::from_millis(self.init_params.interval_in_ms.try_into()?),
+                interval: time::Duration::from_millis(self.init_params.interval_in_ms.try_into()?),
             },
             SetTimeFlags::Default,
         );
@@ -301,18 +304,20 @@ impl PerformanceData {
             }
             if let Some(ev) = poll_fds[0].revents() {
                 if ev.contains(PollFlags::POLLIN) {
-                    let ret = tfd.read();
+                    let ret: u128 = tfd.read().into();
                     if ret > 1 {
-                        error!("Missed {} interval(s)", ret - 1);
+                        error!("Missed {} interval(ms)", ret - 1);
                     }
                     debug!("Time elapsed: {:?}", start.elapsed());
-                    current += time::Duration::from_secs(ret * self.init_params.interval);
+                    current += time::Duration::from_millis(
+                        (ret * self.init_params.interval_in_ms).try_into()?,
+                    );
                     for (name, datatype) in self.collectors.iter_mut() {
                         if datatype.is_static {
                             continue;
                         }
 
-                        datatype.collector_params.elapsed_time = start.elapsed().as_secs();
+                        datatype.collector_params.elapsed_time = start.elapsed().as_millis();
 
                         aperf_collect_data.measure(
                             name.clone() + "-collect",
@@ -552,15 +557,22 @@ impl VisualizationData {
     }
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub enum TimeType {
+    SECONDS,
+    MILLISECONDS,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct InitParams {
     pub time_now: DateTime<Utc>,
     pub time_str: String,
     pub dir_name: String,
-    pub period: u64,
+    pub period_in_ms: u128,
     pub profile: HashMap<String, String>,
     pub pmu_config: Option<PathBuf>,
-    pub interval: u64,
+    pub interval_in_ms: u128,
+    pub interval_type: TimeType,
     pub run_name: String,
     pub collector_version: String,
     pub commit_sha_short: String,
@@ -596,10 +608,11 @@ impl InitParams {
             time_now,
             time_str,
             dir_name,
-            period: 0,
+            period_in_ms: 10000,
             profile: HashMap::new(),
             pmu_config: Option::None,
-            interval: 0,
+            interval_in_ms: 1000,
+            interval_type: TimeType::SECONDS,
             run_name,
             collector_version,
             commit_sha_short,

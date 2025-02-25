@@ -19,7 +19,7 @@ pub mod vmstat;
 
 use crate::utils::DataMetrics;
 use crate::visualizer::{GetData, ReportParams};
-use crate::{noop, InitParams, APERF_FILE_FORMAT};
+use crate::{noop, InitParams, TimeType, APERF_FILE_FORMAT};
 use anyhow::Result;
 use aperf_runlog::AperfRunlog;
 use aperf_stats::AperfStat;
@@ -42,14 +42,19 @@ use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::ops::Sub;
 use std::path::PathBuf;
+use std::sync::Mutex;
 use sysctldata::SysctlData;
 use systeminfo::SystemInfo;
 use vmstat::{Vmstat, VmstatRaw};
 
+lazy_static! {
+    pub static ref INTERVAL_TYPE: Mutex<TimeType> = Mutex::new(TimeType::SECONDS);
+}
+
 #[derive(Clone, Debug)]
 pub struct CollectorParams {
-    pub collection_time: u64,
-    pub elapsed_time: u64,
+    pub collection_time: u128,
+    pub elapsed_time: u128,
     pub data_file_path: PathBuf,
     pub data_dir: PathBuf,
     pub run_name: String,
@@ -125,7 +130,7 @@ impl DataType {
         self.full_path = format!("{}/{}", param.dir_name, name);
         self.dir_name = param.dir_name.clone();
         self.collector_params.run_name = param.dir_name.clone();
-        self.collector_params.collection_time = param.period;
+        self.collector_params.collection_time = param.period_in_ms;
         self.collector_params.elapsed_time = 0;
         self.collector_params.data_file_path = PathBuf::from(&self.full_path);
         self.collector_params.data_dir = PathBuf::from(param.dir_name.clone());
@@ -196,9 +201,12 @@ impl Sub for TimeEnum {
             TimeEnum::DateTime(value) => value,
             _ => panic!("Cannot perform subtract op on TimeEnum::TimeDiff"),
         };
-        let time_diff = (self_time - other_time).num_milliseconds() as u64;
-        // Round up to the nearest second
-        TimeEnum::TimeDiff((time_diff + 500) / 1000)
+        let mut time_diff = (self_time - other_time).num_milliseconds() as u64;
+        if *INTERVAL_TYPE.lock().unwrap() == TimeType::SECONDS {
+            // Round up to the nearest second
+            time_diff = (time_diff + 500) / 1000;
+        }
+        TimeEnum::TimeDiff(time_diff)
     }
 }
 
