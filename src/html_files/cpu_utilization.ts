@@ -75,7 +75,7 @@ function getUtilizationType(run, elem, type, run_data) {
     var layout = {
         title: `CPU Utilization - ${type}`,
         xaxis: {
-            title: 'Time (s)',
+            title: `Time (${get_x_axis_unit(run)})`,
         },
         yaxis: {
             title: 'CPU Utilization (%)',
@@ -171,7 +171,7 @@ function getCpuUtilization(elem, run, run_data) {
     var layout = {
         title: 'Aggregate CPU Utilization',
         xaxis: {
-            title: 'Time (s)',
+            title: `Time (${get_x_axis_unit(run)})`,
         },
         yaxis: {
             title: 'CPU Utilization (%)',

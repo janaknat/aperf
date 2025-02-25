@@ -1,6 +1,6 @@
 let got_aperfstat_data = false;
 
-function getAperfEntry(elem, key, run_data) {
+function getAperfEntry(elem, key, run_data, run) {
     var value = JSON.parse(run_data);
     let collect = value.collect;
     let print = value.print;
@@ -33,7 +33,7 @@ function getAperfEntry(elem, key, run_data) {
     var layout = {
         title: `${key}`,
         xaxis: {
-            title: 'Time (s)',
+            title: `Time (${get_x_axis_unit(run)})`,
         },
         yaxis: {
             title: 'Time (us)',
@@ -55,7 +55,7 @@ function getAperfEntries(run, container_id, keys, run_data) {
             return;
         }
         addElemToNode(container_id, elem);
-        emptyOrCallback(keys, false, getAperfEntry, elem, value, run_data);
+        emptyOrCallback(keys, false, getAperfEntry, elem, value, run_data, run);
     }
 }
 

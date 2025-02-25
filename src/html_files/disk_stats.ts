@@ -1,7 +1,7 @@
 let got_disk_stat_data = false;
 let diskstat_hide_zero_na_graphs = false;
 
-function getStatValues(elem, key, run_data) {
+function getStatValues(elem, key, run_data, run) {
     var disk_datas = [];
     var data = JSON.parse(run_data);
     data.data.forEach(function (v, i, a) {
@@ -32,7 +32,7 @@ function getStatValues(elem, key, run_data) {
     var layout = {
         title: key,
         xaxis: {
-            title: 'Time (s)',
+            title: `Time (${get_x_axis_unit(run)})`,
         },
         yaxis: {
             title: unit,
@@ -49,7 +49,7 @@ function getStatKeys(run, container_id, keys, run_data) {
         elem.id = `disk-stat-${run}-${value}`;
         elem.style.float = "none";
         addElemToNode(container_id, elem);
-        emptyOrCallback(keys, diskstat_hide_zero_na_graphs, getStatValues, elem, value, run_data);
+        emptyOrCallback(keys, diskstat_hide_zero_na_graphs, getStatValues, elem, value, run_data, run);
     }
 }
 

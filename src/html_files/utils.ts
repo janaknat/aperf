@@ -1,4 +1,5 @@
 declare let runs_raw;
+declare let init_params_raw;
 declare let system_info_raw_data;
 declare let cpu_utilization_raw_data;
 declare let vmstat_raw_data;
@@ -198,4 +199,12 @@ function get_data_key(data_type, key) {
         }
     }
     return key_value_map;
+}
+
+function get_x_axis_unit(run_name) {
+    if (init_params_raw[run_name]['interval_type'] == "MILLSECONDS") {
+        return 'ms';
+    } else {
+        return 's';
+    }
 }
