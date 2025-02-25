@@ -1,3 +1,4 @@
+use crate::data::INTERVAL_TYPE;
 use crate::{PDError, VISUALIZATION_DATA};
 use anyhow::Result;
 use clap::Args;
@@ -278,6 +279,7 @@ pub fn report(report: &Report, tmp_dir: &PathBuf) -> Result<()> {
         let calls = visualizer.get_calls(api_name.clone())?;
         let mut api = Api::new(name.clone());
         for run_name in &run_names {
+            *INTERVAL_TYPE.lock().unwrap() = init_map.get(run_name).unwrap().interval_type.clone();
             let mut temp_keys: Vec<String> = Vec::<String>::new();
             let mut run = Run::new(run_name.clone());
             let mut keys = false;
