@@ -193,7 +193,7 @@ function get_data_key(data_type, key) {
     let key_value_map = new Map<string, any>();
     for (let run in raw_analytics) {
         let run_data = raw_analytics[run].values;
-        if (key in run_data[data_type]) {
+        if (run_data[data_type] != undefined && key in run_data[data_type]) {
             let v = run_data[data_type][key];
             key_value_map.set(run, get_inside_value(v));
         }
@@ -207,4 +207,11 @@ function get_x_axis_unit(run_name) {
     } else {
         return 's';
     }
+}
+
+function get_interval_data(run_name) {
+    if (init_params_raw[run_name]['interval_type'] == "MILLISECONDS") {
+        return [init_params_raw[run_name]['interval_in_ms'], "ms"];
+    }
+    return [init_params_raw[run_name]['interval_in_ms'] / 1000, "s"];
 }

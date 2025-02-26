@@ -68,6 +68,7 @@ function is_unique(values_array) {
 }
 
 let all_rules: Rules[] = [
+    aperf_rules,
     system_info_rules,
     cpu_utilization_rules,
 ];
