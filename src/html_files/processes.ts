@@ -31,7 +31,7 @@ function getProcesses(run, container_id, run_data) {
         var layout = {
             title: value.name,
             xaxis: {
-                title: 'Time(s)',
+                title: `Time(${get_x_axis_unit(run)})`,
                 range: [0, data.collection_time.TimeDiff],
             },
             yaxis: {

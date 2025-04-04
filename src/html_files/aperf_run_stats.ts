@@ -3,10 +3,41 @@ let got_aperfstat_data = false;
 let aperfstats_rules = {
     data_type: "aperf_run_stats",
     pretty_name: "Aperf Stats",
-    rules: []
+    rules: [
+        {
+            name: "Interval",
+            all_run_rule: function* (opts): Generator<Finding, void, any> {
+                //Older runs have 'interval'.
+                if (!('interval_in_ms' in init_params_raw[opts.base_run]))
+                    return;
+                let base_interval = get_interval_data(opts.base_run);
+                let interval_str = `${opts.base_run} has an interval: ${base_interval[0]}${base_interval[1]}. `;
+                let interval_and_type = false;
+                let interval_only = false;
+                let other_runs = opts.runs.slice(1);
+                for (let run of other_runs) {
+                    let this_interval = get_interval_data(run);
+                    interval_str = interval_str.concat(`${run} has an interval: ${this_interval[0]}${this_interval[1]}. `);
+                    if (base_interval[0] != this_interval[0]) {
+                        if (base_interval[1] != this_interval[1]) {
+                            interval_and_type = true;
+                        }
+                        interval_only = true;
+                    }
+                }
+                if (interval_and_type) {
+                    yield new Finding(`Intervals don't match in time and units. ${interval_str}`, Status.NotGood);
+                } else if (interval_only) {
+                    yield new Finding(`Intervas don't match in time. ${interval_str}`, Status.NotGood);
+                } else {
+                    yield new Finding(`Intervals match in time and units. ${interval_str}`, Status.Good);
+                }
+            }
+        }
+    ]
 }
 
-function getAperfEntry(elem, key, run_data) {
+function getAperfEntry(elem, key, run_data, run) {
     var value = JSON.parse(run_data);
     let collect = value.collect;
     let print = value.print;
@@ -39,7 +70,7 @@ function getAperfEntry(elem, key, run_data) {
     var layout = {
         title: `${key}`,
         xaxis: {
-            title: 'Time (s)',
+            title: `Time (${get_x_axis_unit(run)})`,
         },
         yaxis: {
             title: 'Time (us)',
@@ -61,7 +92,7 @@ function getAperfEntries(run, container_id, keys, run_data) {
             return;
         }
         addElemToNode(container_id, elem);
-        emptyOrCallback(keys, false, getAperfEntry, elem, value, run_data);
+        emptyOrCallback(keys, false, getAperfEntry, elem, value, run_data, run);
     }
 }
 

@@ -63,7 +63,7 @@ function get_divisor_unit(key) {
     };
 }
 
-function getMeminfo(elem, key, run_data) {
+function getMeminfo(elem, key, run_data, run) {
     var data = JSON.parse(run_data);
     var x_data = [];
     var y_data = [];
@@ -103,7 +103,7 @@ function getMeminfo(elem, key, run_data) {
     var layout = {
         title: key,
         xaxis: {
-            title: 'Time (s)',
+            title: `Time (${get_x_axis_unit(run)})`,
         },
         yaxis: {
             title: `${unit}`,
@@ -120,7 +120,7 @@ function getMeminfoKeys(run, container_id, keys, run_data) {
         elem.id = `disk-stat-${run}-${value}`;
         elem.style.float = "none";
         addElemToNode(container_id, elem);
-        emptyOrCallback(keys, meminfo_hide_zero_na_graphs, getMeminfo, elem, value, run_data);
+        emptyOrCallback(keys, meminfo_hide_zero_na_graphs, getMeminfo, elem, value, run_data, run);
     }
 }
 

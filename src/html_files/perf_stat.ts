@@ -97,7 +97,7 @@ function getEvent(elem, key, run_data, run) {
     var layout = {
         title: `${key}`,
         xaxis: {
-            title: 'Time (s)',
+            title: `Time (${get_x_axis_unit(run)})`,
         },
         yaxis: {
             title: 'Count',

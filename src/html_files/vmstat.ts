@@ -14,11 +14,11 @@ function getEntries(run, container_id, keys, run_data) {
         elem.id = `vmstat-${run}-${value}`;
         elem.style.float = "none";
         addElemToNode(container_id, elem);
-        emptyOrCallback(keys, vmstat_hide_zero_na_graphs, getEntry, elem, value, run_data);
+        emptyOrCallback(keys, vmstat_hide_zero_na_graphs, getEntry, elem, value, run_data, run);
     }
 }
 
-function getEntry(elem, key, run_data) {
+function getEntry(elem, key, run_data, run) {
     var data = JSON.parse(run_data);
     var x_time = [];
     var y_data = [];
@@ -36,7 +36,7 @@ function getEntry(elem, key, run_data) {
     var layout = {
         title: `${key}`,
         xaxis: {
-            title: 'Time (s)',
+            title: `Time (${get_x_axis_unit(run)})`,
         },
         yaxis: {
             title: 'Pages',
